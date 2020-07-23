@@ -1,6 +1,9 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras import layers
+
+from src.layers import *
 
 class UNet_2d(keras.Model):
     def __init__(self):
