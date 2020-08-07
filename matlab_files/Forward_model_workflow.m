@@ -1,10 +1,11 @@
 % Input filepaths
-comps_path = ['./data/SVD_2_5um_PSF_5um_1_ds2_components_green_SubAvg.mat'];
-weights_path = ['./data/SVD_2_5um_PSF_5um_1_ds2_weights_interp_green_SubAvg.mat'];
-v_path = ['./data/sample3.mat'];
+comps_path = ['../data/PSFs/SVD_2_5um_PSF_5um_1_ds2_components_green_SubAvg.mat'];
+weights_path = ['../data/PSFs/SVD_2_5um_PSF_5um_1_ds2_weights_interp_green_SubAvg.mat'];
+v_path = ['../data/real-data/realData.mat'];
 
 params.ds_psf = 2;   %PSf downsample ratio (how much to further downsample -- if preprocessing included downsampling, use 1)
-params.z_range = 1:24; %Must be even number!! Range of z slices to be solved for. If this is a scalar, 2D. Use this for subsampling z also (e.g. 1:4:... to do every 4th image)
+params.z_range = 1; %Must be even number!! Range of z slices to be solved for. If this is a scalar, 2D. Use this for subsampling z also (e.g. 1:4:... to do every 4th image)
+params.rank = 24;
 
 
 % Load in weights and components
@@ -27,11 +28,12 @@ weights = single(imresize(squeeze(weights),1/params.ds_psf,'box'));
 % Normalize weights to have maximum sum through rank of 1
 weights_norm = max(sum(weights(size(weights,1)/2,size(weights,2)/2,:,:),4),[],3);  
 weights = weights/weights_norm;
-h = h/norm(vec(h));
+h = h/norm(h(:));
 
 % Load sample
 v = load(v_path);
-v = permute(v.dset(:, :, :), [3, 2, 1]);
+v = permute(v.beads(:, :, :), [3, 1, 2]);
+v = single(imresize(squeeze(v), 1/params.ds_psf, 'nearest'));
 
 fprintf('Done. PSF ready!\n');
 
@@ -46,6 +48,8 @@ crop2d = @(x)x(rcL:rcU,ccL:ccU);
 
 H = fft2(ifftshift(ifftshift(pad2d(h),1),2));
 
-sim_image = double(A_svd_2d(H,weights,x,pad2d,pad2d_weights,crop2d));
+sim_image = double(A_svd_2d(H,weights,v,pad2d,pad2d_weights,crop2d));
 
-save('sim_image.mat', 'sim_image')
+save('images/sim_image.mat', 'sim_image');
+
+fprintf('Saved image.');
