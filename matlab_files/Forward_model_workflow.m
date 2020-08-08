@@ -1,7 +1,7 @@
 % Input filepaths
 comps_path = ['../data/PSFs/SVD_2_5um_PSF_5um_1_ds2_components_green_SubAvg.mat'];
 weights_path = ['../data/PSFs/SVD_2_5um_PSF_5um_1_ds2_weights_interp_green_SubAvg.mat'];
-v_path = ['../data/real-data/realData.mat'];
+v_path = ['../testing/testing_images/sample_example.mat'];
 
 params.ds_psf = 2;   %PSf downsample ratio (how much to further downsample -- if preprocessing included downsampling, use 1)
 params.z_range = 1; %Must be even number!! Range of z slices to be solved for. If this is a scalar, 2D. Use this for subsampling z also (e.g. 1:4:... to do every 4th image)
@@ -32,8 +32,8 @@ h = h/norm(h(:));
 
 % Load sample
 v = load(v_path);
-v = permute(v.beads(:, :, :), [3, 1, 2]);
-v = single(imresize(squeeze(v), 1/params.ds_psf, 'nearest'));
+v = squeeze(permute(v.sample(:, :, :), [3, 2, 1]));
+% v = single(imresize(squeeze(v), 1/params.ds_psf, 'nearest'));
 
 fprintf('Done. PSF ready!\n');
 
@@ -48,7 +48,7 @@ crop2d = @(x)x(rcL:rcU,ccL:ccU);
 
 H = fft2(ifftshift(ifftshift(pad2d(h),1),2));
 
-sim_image = double(A_svd_2d(H,weights,v,pad2d,pad2d_weights,crop2d));
+sim_image = double(real(A_svd_2d(H,weights,v,pad2d,pad2d_weights,crop2d)));
 
 save('images/sim_image.mat', 'sim_image');
 
