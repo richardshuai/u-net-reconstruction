@@ -19,16 +19,8 @@ class UNet_2d(keras.Model):
         self.up5 = StackDecoder(256, kernel_size=3, dilation_rate=4)
         self.up4 = StackDecoder(128, kernel_size=3, dilation_rate=4)
         self.up3 = StackDecoder(64, kernel_size=3, dilation_rate=4)
-        
-
-        self.up2 = StackDecoder(24, kernel_size=7, dilation_rate=4)
-        self.up2_1 = ConvBnRelu2d(24, kernel_size=3, dilation_rate=1)
-        
+        self.up2 = StackDecoder(24, kernel_size=3, dilation_rate=4)
         self.up1 = StackDecoder(24, kernel_size=3, dilation_rate=4)
-        self.up1_1 = ConvBnRelu2d(24, kernel_size=7, dilation_rate=1)
-        self.up1_2 = ConvBnRelu2d(24, kernel_size=7, dilation_rate=1)
-        self.up1_3 = ConvBnRelu2d(24, kernel_size=7, dilation_rate=1)
-
         
         # Final prediction uses a single feature channel (green)
         self.classify = layers.Conv2D(filters=1, kernel_size=1, use_bias=True)
@@ -52,11 +44,7 @@ class UNet_2d(keras.Model):
         out = self.up4(out, down4_tensor)
         out = self.up3(out, down3_tensor)
         out = self.up2(out, down2_tensor)
-        out = self.up2_1(out)
         out = self.up1(out, down1_tensor)
-        out = self.up1_1(out)
-        out = self.up1_2(out)
-        out = self.up1_3(out)
 
         out = self.classify(out)
         out = tf.squeeze(out, axis=3)
