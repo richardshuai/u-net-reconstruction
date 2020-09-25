@@ -14,6 +14,8 @@ class UNet_2d(keras.Model):
         self.down4 = StackEncoder(256, kernel_size=3, dilation_rate=4)
         self.down5 = StackEncoder(512, kernel_size=3, dilation_rate=4)
         self.down6 = StackEncoder(1024, kernel_size=3, dilation_rate=4)
+        
+        self.center = ConvBnRelu2d(1024, kernel_size=3, padding='same')
 
         self.up6 = StackDecoder(512, kernel_size=3, dilation_rate=4)
         self.up5 = StackDecoder(256, kernel_size=3, dilation_rate=4)
@@ -25,7 +27,6 @@ class UNet_2d(keras.Model):
         # Final prediction uses a single feature channel (green)
         self.classify = layers.Conv2D(filters=1, kernel_size=1, use_bias=True)
         
-        self.center = ConvBnRelu2d(1024, kernel_size=3, padding='same')
         
         
     def call(self, x):
