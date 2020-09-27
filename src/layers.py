@@ -71,3 +71,29 @@ class StackDecoder(layers.Layer):
         x = layers.concatenate([x, down_tensor], axis=3)
         x = self.decode(x)
         return x
+    
+class GaussianFourierFeatureTransform(layers.Layer):
+    """
+    An implementation of Gaussian Fourier feature mapping.
+    
+    "Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains"
+        https://arxiv.org/pdf/2006.10739.pdf
+        
+    Input: tensor of size [N, H, W, C]
+    Return: tensor of size [N, H, W, mapping_size*2]
+    """
+    def __init__(self, mapping_size=128, scale=10):
+        super(GaussianFourierFeatureTransform, self).__init__()
+        self.mapping_size = scale
+        self.scale = mapping_size
+        
+    def call(self, x):
+        N, H, W, C = x.shape
+        B = tf.random.normal([C, self.mapping_size], mean=0, stddev=self.scale)
+        
+        # Matmul with B and reshape
+        x = tf.reshape(x, (N*H*W, C)) @ B
+        x = tf.reshape(x, (N, H, W, self.mapping_size))
+        
+        x = 2 * np.pi * x
+        return tf.concat([tf.math.sin(x), tf.math.cos(x)], axis=-1)

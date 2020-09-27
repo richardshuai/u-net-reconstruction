@@ -8,6 +8,8 @@ from src.layers import *
 class UNet_2d(keras.Model):
     def __init__(self):
         super(UNet_2d, self).__init__()
+        self.featurize = GaussianFourierFeatureTransform(mapping_size=128, scale=10)
+        
         self.down1 = StackEncoder(24, kernel_size=3, dilation_rate=4)
         self.down2 = StackEncoder(64, kernel_size=3, dilation_rate=4)
         self.down3 = StackEncoder(128, kernel_size=3, dilation_rate=4)
@@ -30,7 +32,10 @@ class UNet_2d(keras.Model):
         
         
     def call(self, x):
-        out = x;
+        out = x
+        
+        out = self.featurize(out)
+        
         down1_tensor, out = self.down1(out)
         down2_tensor, out = self.down2(out)
         down3_tensor, out = self.down3(out)
