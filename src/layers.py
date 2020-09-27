@@ -88,12 +88,9 @@ class GaussianFourierFeatureTransform(layers.Layer):
         self.scale = mapping_size
         
     def call(self, x):
-        N, H, W, C = x.shape
+        _, _, _, C = x.shape
         B = tf.random.normal([C, self.mapping_size], mean=0, stddev=self.scale)
         
-        # Matmul with B and reshape
-        x = tf.reshape(x, (N*H*W, C)) @ B
-        x = tf.reshape(x, (N, H, W, self.mapping_size))
-        
+        x = x @ B
         x = 2 * np.pi * x
         return tf.concat([tf.math.sin(x), tf.math.cos(x)], axis=-1)
