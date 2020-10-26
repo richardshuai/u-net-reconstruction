@@ -21,6 +21,9 @@ def pad_2d(x, mode='constant'):
     return x
 
 def pad_2d_tf(x, mode='CONSTANT'):
+    """
+    Fix pad_2d to allow variable length dimensions.
+    """
     _, _, h, w = x.shape
     padding = ((0, 0), (0, 0), 
                (int(np.ceil(h / 2)), int(np.floor(h / 2))),

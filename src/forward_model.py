@@ -57,6 +57,21 @@ class ForwardModel():
 
         return y
     
+    def A_svd_2d_no_crop_tf(self, v, weights, h):
+        v = tf.dtypes.cast(v, dtype=tf.complex64)
+        weights = tf.dtypes.cast(weights, dtype=tf.complex64)
+        h = tf.dtypes.cast(h, dtype=tf.complex64)
+
+        v_pad = pad_2d_tf(v[None, None, ...])
+        weights_pad = pad_2d_tf(weights)
+        V = tf.signal.fft2d(tf.signal.ifftshift(weights_pad*v_pad, axes=(2, 3)))
+        H = tf.signal.fft2d(tf.signal.ifftshift(pad_2d_tf(h), axes=(2, 3)))
+        Y = V*H
+        y = tf.math.reduce_sum(tf.math.real(tf.signal.fftshift(tf.signal.ifft2d(Y), axes=(2, 3))), axis=(0, 1))
+
+        return y
+        
+    
     def A_adj_svd_2d(self, v, weights, h):
         v_pad = pad_2d(v[None, None, ...])
         weights_pad = pad_2d(weights)
@@ -109,6 +124,53 @@ class ForwardModel():
         y = crop_2d_tf(tf.math.reduce_sum(weights_pad * tf.math.real(tf.signal.fftshift(tf.signal.ifft2d(Y), axes=(2, 3))), axis=(0, 1)))
         
         return y
+    
+    def A2d_inv_cg_tf(self, x, weights, h, alpha_cg):
+        return self.A_adj_svd_2d_tf(self.A_svd_2d_tf(x, weights, h), weights, h) + alpha_cg*x
+
+    def cgsolve_tf(self, z, b, weights, h, Niter, alpha_cg):
+        #b is A*y
+        #solving z=M-1b
+        r=b-self.A2d_inv_cg_tf(z, weights, h, alpha_cg)
+        p=tf.identity(r)
+        rsold=tf.math.conj(tf.math.reduce_sum(r*r))
+    #     print('loss ', rsold)
+        for i in range(0,Niter):
+            Ap=self.A2d_inv_cg_tf(p, weights, h, alpha_cg)
+            alpha=rsold/(tf.math.conj(tf.math.reduce_sum(p*Ap)))
+            z=z+alpha*p
+            r=r-alpha*Ap
+
+            rsnew=tf.math.conj(tf.math.reduce_sum(r*r))
+            if tf.math.sqrt(rsnew)<1e-10:
+                break
+                
+            p=r+(rsnew/rsold)*p
+            rsold=rsnew
+    #         print('loss ',rsold)
+        return z
+    
+    def wiener_deconvolve(self, x, weights, h, Niter):
+        Ah_b_2d = self.A_adj_svd_2d_tf(x, weights, h)
+        z_wiener=tf.zeros(tf.shape(x))
+        x_wiener=self.cgsolve_tf(z_wiener, Ah_b_2d, weights, h, Niter, 1e-4)
+        
+        return x_wiener
+
+    def wiener_deconvolve_one_step(self, y, psf, K):
+        y = tf.dtypes.cast(y, dtype=tf.complex64)
+        psf = tf.dtypes.cast(psf, dtype=tf.complex64)
+
+        Y=tf.signal.fft2d((pad_2d_tf(y[None, None, ...])))
+        H_sum=tf.signal.fft2d((pad_2d_tf(psf[None, ...])))#np.sum(H,2)
+
+        X=(tf.math.conj(H_sum)*Y)/tf.dtypes.cast(tf.math.square(tf.math.abs(H_sum))+K, dtype=tf.complex64)
+        x=tf.squeeze(tf.math.real((tf.signal.ifftshift(np.fft.ifft2(X), axes=(2, 3)))))
+        
+        x = crop_2d_tf(x)
+        
+        return x
+
     
 # def A_2d_svd(x,H,weights,pad,mode='shift_variant'): #NOTE, H is already padded outside to save memory
 #     x=pad(x)
