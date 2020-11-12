@@ -161,17 +161,32 @@ class ForwardModel():
         y = tf.dtypes.cast(y, dtype=tf.complex64)
         psf = tf.dtypes.cast(psf, dtype=tf.complex64)
 
-        Y=tf.signal.fft2d((pad_2d_tf(y[None, None, ...])))
-        H_sum=tf.signal.fft2d((pad_2d_tf(psf[None, ...])))#np.sum(H,2)
+        Y=tf.signal.fft2d((pad_2d_tf(y)))
+        H_sum=tf.signal.fft2d((pad_2d_tf(psf)))#np.sum(H,2)
 
         X=(tf.math.conj(H_sum)*Y)/tf.dtypes.cast(tf.math.square(tf.math.abs(H_sum))+K, dtype=tf.complex64)
-        x=tf.squeeze(tf.math.real((tf.signal.ifftshift(np.fft.ifft2(X), axes=(2, 3)))))
+#         x=tf.math.real((tf.signal.ifftshift(np.fft.ifft2(X))))
+        x=tf.math.real((tf.signal.ifftshift(tf.signal.ifft2d(X))))
         
         x = crop_2d_tf(x)
         
         return x
-
     
+    def A_svd_2d_tf_components(self, v, weights, h):
+        v = tf.dtypes.cast(v, dtype=tf.complex64)
+        weights = tf.dtypes.cast(weights, dtype=tf.complex64)
+        h = tf.dtypes.cast(h, dtype=tf.complex64)
+
+        v_pad = pad_2d_tf(v[None, None, ...])
+        weights_pad = pad_2d_tf(weights)
+        V = tf.signal.fft2d(tf.signal.ifftshift(weights_pad*v_pad, axes=(2, 3)))
+        H = tf.signal.fft2d(tf.signal.ifftshift(pad_2d_tf(h), axes=(2, 3)))
+        Y = V*H
+        y = crop_2d_tf(tf.math.reduce_sum(tf.math.real(tf.signal.fftshift(tf.signal.ifft2d(Y), axes=(2, 3))), axis=1))
+
+        return y
+    
+
 # def A_2d_svd(x,H,weights,pad,mode='shift_variant'): #NOTE, H is already padded outside to save memory
 #     x=pad(x)
 #     Y=np.zeros((np.shape(x)[0],np.shape(x)[1]))
