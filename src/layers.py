@@ -199,8 +199,8 @@ class WienerDeconvolutionPerComponent(layers.Layer):
       
 
         # Components preprocessing, comps is shape (H, W, R)
-        comps = tf.dtypes.cast(self.comps, dtype=tf.complex64)
-        h_psf, w_psf = psf.shape
+        psf = tf.dtypes.cast(self.comps, dtype=tf.complex64)
+        h_psf, w_psf, _ = psf.shape
         
         # Pad psf
         padding_psf = (

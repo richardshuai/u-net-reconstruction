@@ -86,9 +86,9 @@ class UNet_2d_wiener(keras.Model):
         # Final prediction uses a single feature channel (green)
         self.classify = layers.Conv2D(filters=1, kernel_size=1, use_bias=True)
         
-#         cropping = ((216, 216),
-#            (162, 162))
-#         self.crop = layers.Cropping2D(cropping=cropping)
+        cropping = ((216, 216),
+           (162, 162))
+        self.crop = layers.Cropping2D(cropping=cropping)
         
 
         
@@ -113,7 +113,7 @@ class UNet_2d_wiener(keras.Model):
 
         out = self.classify(out)
 
-#         out = self.crop(out)
+        out = self.crop(out)
 
         out = tf.squeeze(out, axis=3)
         
@@ -122,7 +122,7 @@ class UNet_2d_wiener(keras.Model):
     
 class UNet_2d_wiener_components(keras.Model):
     def __init__(self, initial_comps, initial_K):
-        super(UNet_2d_wiener, self).__init__()
+        super(UNet_2d_wiener_components, self).__init__()
         self.wiener_comps = WienerDeconvolutionPerComponent(initial_comps, initial_K)
 
         self.down1 = StackEncoder(24, kernel_size=3, dilation_rate=1, separable_conv=True)
