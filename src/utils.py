@@ -66,3 +66,4 @@ def crop_2d_tf(v):
         h1, h2 = int(np.ceil(h / 4)), h - int(np.floor(h / 4))
         w1, w2 = int(np.ceil(w / 4)), w - int(np.floor(w / 4))
         return v[:, h1:h2, w1:w2, :]
+    

@@ -12,4 +12,4 @@ unet_reconstruction.egg-info/
 venv_unet/
 temp
 logs_dev
-
+results

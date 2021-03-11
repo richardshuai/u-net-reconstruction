@@ -172,6 +172,25 @@ class ForwardModel():
         
         return x
     
+    def convolve_tf(self, x, psf):
+        """
+        Frequency domain convolution.
+
+        Inputs:
+          - x: input image of shape (y, x)
+          - psf: psf of shape (y, x)
+        """
+        x = tf.dtypes.cast(x, dtype=tf.complex64)
+        psf = tf.dtypes.cast(psf, dtype=tf.complex64)
+
+        X = tf.signal.fft2d(tf.signal.ifftshift(pad_2d_tf(x)))
+        H = tf.signal.fft2d(tf.signal.ifftshift(pad_2d_tf(psf)))
+
+        X = X*H
+        X = crop_2d_tf(tf.math.real(tf.signal.fftshift(tf.signal.ifft2d(X))))
+
+        return X    
+    
     def A_svd_2d_tf_components(self, v, weights, h):
         v = tf.dtypes.cast(v, dtype=tf.complex64)
         weights = tf.dtypes.cast(weights, dtype=tf.complex64)
@@ -184,7 +203,7 @@ class ForwardModel():
         Y = V*H
         y = crop_2d_tf(tf.math.reduce_sum(tf.math.real(tf.signal.fftshift(tf.signal.ifft2d(Y), axes=(2, 3))), axis=1))
 
-        return y
+        return y    
     
 
 # def A_2d_svd(x,H,weights,pad,mode='shift_variant'): #NOTE, H is already padded outside to save memory
