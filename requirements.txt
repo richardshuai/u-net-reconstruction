@@ -89,7 +89,7 @@ tifffile==2020.7.17
 tornado==6.0.4
 traitlets==4.3.3
 -e git+https://github.com/richardshuai/u-net-reconstruction.git@e5f1970818e59abb098e5d6a97afc5c3c483b66c#egg=unet_reconstruction
-urllib3==1.25.10
+urllib3==1.26.5
 wcwidth==0.2.5
 webencodings==0.5.1
 Werkzeug==1.0.1
